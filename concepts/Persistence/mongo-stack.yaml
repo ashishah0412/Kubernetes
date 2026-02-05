@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  replicas: 1
+  template: # template for the pods
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:3.6.23
+        volumeMounts:
+          - name: mongo-persistent-storage
+            mountPath: /data/db # path inside the container where the volume will be mounted and where MongoDB stores its data stores data
+      volumes:
+        - name: mongo-persistent-storage
+          # 1st to check the local file 
+          # hostPath:
+          #  - path: "/mnt/some new/directory/structure/"
+          #  - type: DirectoryOrCreate
+          # 2nd to check will be PersistentVolumeClaim 
+          # pointer to the configuration of HOW we want the mount to be implemented
+          persistentVolumeClaim:
+            claimName: mongo-pvc
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: fleetman-mongodb
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - name: mongoport
+      port: 27017
+  type: ClusterIP
